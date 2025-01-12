@@ -11,6 +11,8 @@ os.environ['NUMEXPR_MAX_THREADS'] = NUMEXPR_MAX_THREADS
 
 class KnowledgeBase:
     def __init__(self):
+        if not os.path.exists(VEC_BASE_PATH):
+            os.makedirs(VEC_BASE_PATH)
         self.metadata_file = os.path.join(VEC_BASE_PATH, 'kb_metadata.json')
         self.load_kb_metadata()
 
@@ -179,15 +181,6 @@ class KnowledgeBase:
             doc = create_document_from_item(item)
             docs.append(doc)
 
-        # from langchain_community.chat_models import QianfanChatEndpoint
-        # import os
-        #
-        # os.environ["QIANFAN_AK"] = QIANFAN_AK
-        # os.environ["QIANFAN_SK"] = QIANFAN_SK
-        # llm = QianfanChatEndpoint(
-        #     streaming=False,
-        # )
-
         from langchain_community.chat_models import ChatOpenAI
 
         llm = ChatOpenAI(
@@ -206,7 +199,8 @@ class KnowledgeBase:
         )
 
         res = transformer.convert_to_graph_documents(docs)
-        logging.info(res)
+        for item in res:
+            logging.debug(item)
 
 
 
