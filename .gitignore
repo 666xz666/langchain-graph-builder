@@ -3,4 +3,5 @@ models
 logs
 *.log
 vec_base
+config.py
 
