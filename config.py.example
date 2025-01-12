@@ -1,0 +1,48 @@
+#大模型配置
+#kimi
+KIMI_API_KEY = ""
+
+#qianfan
+QIANFAN_AK = ""
+QIANFAN_SK = ""
+
+#openai(proxy)
+OPENAI_API_KEY = ""
+OPENAI_BASE_URL = "https://yunwu.ai/v1"
+OPENAI_MODEL = "gpt-4"
+
+#搜索引擎API配置
+APIHZ_USER_ID = ""
+APIHZ_USER_KEY = ""
+
+#Embedding模型路径
+EMBEDDING_MODEL_PATH = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\models\multilingual_MiniLM_L12_v2"
+
+#向量知识库路径
+VEC_BASE_PATH = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\vec_base"
+
+#Neo4j Vector Index配置
+GRAPH_VEC_BASE_PATH = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\graph_vec_base"
+
+# 配置日志路径
+LOG_PATH = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\logs"
+LOG_LEVEL = "DEBUG"  # 这里可以设置为 "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
+
+
+# 允许上传的文件类型
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt'}
+
+# 允许上传的文件大小
+MAX_CONTENT_LENGTH = 20 * 1024 * 1024 #20MB
+
+NEO4J_URI = "bolt://localhost:7687"
+NEO4J_USER = "neo4j"
+NEO4J_PASSWORD = "123456"
+
+# 服务器端口
+SERVER_PORT = 5000
+
+#线程数
+NUMEXPR_MAX_THREADS = '16'
+
+
