@@ -61,7 +61,8 @@ def create_document_from_item(item):
         metadata={
             'embedding': item['embedding'],
             'source_filename': item['source_filename'],
-            'source_url': item['source_url']
+            'file_uuid': item['file_uuid'],
+            'kb_uuid': item['kb_uuid'],
         }
     )
     return document

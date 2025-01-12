@@ -131,7 +131,7 @@ class DocumentProcessor:
         logging.info(f"Top {k} matches found for query: {user_query}")
         return top_k_matches
 
-    def save_file_to_vec(self, kb_dir_path, source_filename, source_id):
+    def save_file_to_vec(self, kb_dir_path, source_filename, source_id, kb_uuid):
         result = self.process_document()
         vecs_path = os.path.join(kb_dir_path, 'vecs')
         if not os.path.exists(vecs_path):
@@ -139,7 +139,8 @@ class DocumentProcessor:
 
         for item in result:
             item['source_filename'] = source_filename
-            item['source_url'] = f"/get_file?file_uuid={source_id}"
+            item['file_uuid'] = source_id
+            item['kb_uuid'] = kb_uuid
 
         output_file = os.path.join(vecs_path, "vecs.json")
         with open(output_file, 'w', encoding='utf-8') as f:

@@ -6,6 +6,7 @@ from text_to_vec import DocumentProcessor
 from utils import *
 import os
 from graph import LLMGraphTransformer
+from neo4j_worker import Neo4jWorker
 
 os.environ['NUMEXPR_MAX_THREADS'] = NUMEXPR_MAX_THREADS
 
@@ -126,7 +127,7 @@ class KnowledgeBase:
             logging.info(f"Processing file {processed_files + 1}/{total_files}: {file_path}")
             processor = DocumentProcessor(file_path)
 
-            processor.save_file_to_vec(kb_dir_path, source_filename, file_uuid)
+            processor.save_file_to_vec(kb_dir_path, source_filename, file_uuid, kb_uuid)
             logging.info(f"File processed successfully: {file_path}")
 
             processed_files += 1
@@ -164,19 +165,6 @@ class KnowledgeBase:
 
         docs = []
         for item in vec_metadata:
-            """数据示例
-            {
-                "id": "2438a50599c24a9b1018e02fe90159bb72c8a1946295d642fbda87b954a316c4",
-                "text": "3 矿大知识平台 矿大知识平台 第一章 系统描述 1.1系统价值 矿大知识平台软件系统，作为一款集大成者的学习与研究辅助工具，深度整合并优化了来自全球各地的多样化知识信息资源，旨在为用户构建一个全面、便捷且高效的知识获取与应用环境。该系统不仅是一个庞大的知识库，更是一个智能化的知识管理与服务平台，它利用先进的信息技术手段，实现了知识的系统化整合与智能化管理，极大地提升了知识检索、利用与创新的效率。本系统主要功能包括：智能对话功能、知识图谱的可视化展示功能、多种文件格式的上传与存储功能、多模式对话功能、系统设置功能等。 智能对话功能是该平台的一大亮点，它基于自然语言处理技术，使得用户能够以日常交流的方式与系统进行互动，无论是查询特定知识点、获取最新资讯，还是提出研究疑问，系统都能迅速响应，提供准确且即时的信息反馈。这种人性化的交互方式不仅极大地降低了知识获取的难度，还显著提升了用户的使用体验和学习效率。",
-                "embedding": [
-                    -0.28859978914260864,
-                    -0.3017699122428894,
-                    ...
-                ],
-                "source_filename": "说明文档.docx",
-                "source_url": "/get_file?file_uuid=8f614339-bfa7-45ed-ace8-705a8ec37273"
-            },
-            """
             logging.debug(item)
             doc = create_document_from_item(item)
             docs.append(doc)
@@ -199,8 +187,9 @@ class KnowledgeBase:
         )
 
         res = transformer.convert_to_graph_documents(docs)
-        for item in res:
-            logging.debug(item)
+
+        worker = Neo4jWorker()
+        worker.save_graphDocuments_in_neo4j(res)
 
 
 
