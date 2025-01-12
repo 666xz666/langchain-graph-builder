@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/models/multilingual_MiniLM_L12_v2" />
+      <excludeFolder url="file://$MODULE_DIR$/vec_base/806c0fe9-62f5-45de-82e0-c8036a40ad1f_TEST" />
+      <excludeFolder url="file://$MODULE_DIR$/vec_base/db8115a2-0190-4789-9ef4-52a717320741_TEST" />
+    </content>
+    <orderEntry type="jdk" jdkName="lgb" jdkType="Python SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
