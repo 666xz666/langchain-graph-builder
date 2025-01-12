@@ -1,0 +1,5 @@
+# 忽略models目录下的所有内容
+models
+*.loh
+vec_base
+
