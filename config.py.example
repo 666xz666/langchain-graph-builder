@@ -31,7 +31,7 @@ LOG_LEVEL = "DEBUG"  # 这里可以设置为 "DEBUG", "INFO", "WARNING", "ERROR"
 
 
 # 允许上传的文件类型
-ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt'}
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'csv', 'xlsx', 'html', 'json', 'md'}
 
 # 允许上传的文件大小
 MAX_CONTENT_LENGTH = 20 * 1024 * 1024 #20MB

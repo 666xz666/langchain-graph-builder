@@ -52,6 +52,7 @@ class DocumentProcessor:
             'html': BSHTMLLoader,
             'json': JSONLoader,
             'pdf': PyPDFLoader,
+            'doc': Docx2txtLoader,
             'docx': Docx2txtLoader
         }
         loader_class = loaders.get(file_extension)
