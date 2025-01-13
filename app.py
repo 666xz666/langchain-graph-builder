@@ -1,4 +1,5 @@
 from io import BytesIO
+from urllib.request import Request
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body, Query
 from fastapi.responses import FileResponse
@@ -16,6 +17,19 @@ import json
 
 from utils import get_logging
 logging = get_logging()
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
+
+class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.method == "POST":
+            if "content-length" not in request.headers:
+                return JSONResponse({"detail": "Missing Content-Length header"}, status_code=411)
+            content_length = int(request.headers["content-length"])
+            if content_length > MAX_CONTENT_LENGTH:
+                return JSONResponse({"detail": "Request body too large"}, status_code=413)
+        response = await call_next(request)
+        return response
 
 app = FastAPI()
 
@@ -27,6 +41,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 添加限制上传大小的中间件
+app.add_middleware(LimitUploadSizeMiddleware)
 
 # 创建 KnowledgeBase 类的实例
 kb = KnowledgeBase()
