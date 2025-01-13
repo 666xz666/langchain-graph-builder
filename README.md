@@ -56,6 +56,6 @@ python app.py
 
 ## Q&A
 
-### 1.  “No module named pwd”
+### 1.  “No module named pwd”（for Windows）
 
 https://blog.csdn.net/qq_40821260/article/details/137644996
