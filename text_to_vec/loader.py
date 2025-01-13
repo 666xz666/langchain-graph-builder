@@ -126,16 +126,6 @@ class DocumentProcessor:
         logging.info(f"Top {k} matches found for query: {user_query}")
         return top_k_matches
 
-    def init_vec(self, kb_dir_path):
-        logging.info(f"Initializing vector library for {kb_dir_path}")
-        vecs_path = os.path.join(kb_dir_path, 'vecs')
-        if not os.path.exists(vecs_path):
-            os.makedirs(vecs_path)
-        output_file = os.path.join(vecs_path, "vecs.json")
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump([], f, ensure_ascii=False, indent=4)
-        logging.info(f"Vector library initialized for {kb_dir_path}")
-
     def save_file_to_vec(self, kb_dir_path, source_filename, source_id, kb_uuid):
         result = self.process_document()
         vecs_path = os.path.join(kb_dir_path, 'vecs')

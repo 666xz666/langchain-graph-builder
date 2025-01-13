@@ -102,12 +102,12 @@ async def get_file(
 @app.post("/delete_kb")
 async def delete_kb(
     kb_uuid: str = Body(..., description="知识库 UUID", examples=["1"]),
-    with_graph: bool = Body(False, description="是否删除图谱", examples=[False])
+    level: Literal["graph", "vec", "all"] = Body("all", description="删除级别", examples=["graph", "vec", "all"])
 ):
     if not kb_uuid:
         raise HTTPException(status_code=400, detail="知识库 UUID 不能为空")
     try:
-        kb.delete_kb(kb_uuid)
+        kb.delete_by_level(kb_uuid, level)
         return {"code": 200, "msg": "知识库删除成功"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

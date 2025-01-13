@@ -24,6 +24,17 @@ class Neo4jWorker:
 
         self.graph.add_graph_documents(graph_document_list, True)
 
+    def delete_by_uuid(self, kb_uuid: str):
+        query = f"""
+        MATCH (d:Document) WHERE d.kb_uuid = '{kb_uuid}'
+        WITH d
+        MATCH (d)-[]->(n)
+        WITH n, d
+        MATCH (n)-[r]-()
+        DELETE r, n, d 
+        """
+        self.run(query)
+
 
 
 
@@ -47,9 +58,11 @@ if __name__ == '__main__':
     DETACH DELETE n
     """
 
-    result = worker.run(query)
+    # result = worker.run(query)
+    #
+    # print(result)
 
-    print(result)
+    worker.delete_by_uuid("276e4a6f-8c00-45cf-b6d3-59304698e320")
 
 
 
