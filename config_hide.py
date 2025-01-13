@@ -1,0 +1,10 @@
+HIDE_LIST = [
+    'KIMI_API_KEY',
+    'QIANFAN_AK',
+    'QIANFAN_SK',
+    'OPENAI_API_KEY',
+    'OPENAI_BASE_URL',
+    'APIHZ_USER_ID',
+    'APIHZ_USER_KEY',
+    'NEO4J_PASSWORD'
+]

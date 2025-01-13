@@ -1,4 +1,4 @@
-from config import HIDE_LIST
+from config_hide import HIDE_LIST
 import sys
 import os
 
