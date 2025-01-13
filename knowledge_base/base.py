@@ -11,6 +11,7 @@ from fastapi import UploadFile
 
 os.environ['NUMEXPR_MAX_THREADS'] = NUMEXPR_MAX_THREADS
 
+
 class KnowledgeBase:
     def __init__(self):
         if not os.path.exists(VEC_BASE_PATH):
@@ -77,7 +78,7 @@ class KnowledgeBase:
         finally:
             kb_info['files'][file_uuid] = {
                 "filename": file_name,
-                "file_path": "files/"+unique_filename
+                "file_path": "files/" + unique_filename
             }
             self.save_kb_metadata()
             return file_uuid
@@ -169,7 +170,7 @@ class KnowledgeBase:
             self.delete_kb(kb_uuid)
         logging.info(f"Cleared all KBs")
 
-    def create_graph_kb(self, kb_uuid, allow_nodes=None, allow_relationships=None, strict_mode=False):
+    def create_graph_kb(self, model_name, kb_uuid, allow_nodes=None, allow_relationships=None, strict_mode=False):
         vec_metadata = self.get_vec_metadata(kb_uuid)
         if not vec_metadata:
             raise Exception(f"向量库文件不存在: {kb_uuid}")
@@ -180,14 +181,8 @@ class KnowledgeBase:
             doc = create_document_from_item(item)
             docs.append(doc)
 
-        from langchain_community.chat_models import ChatOpenAI
-
-        llm = ChatOpenAI(
-            temperature=0,
-            model=OPENAI_MODEL,
-            openai_api_key=OPENAI_API_KEY,
-            openai_api_base=OPENAI_BASE_URL
-        )
+        from chat_openai import get_chat_openai
+        llm = get_chat_openai(model_name)
 
         # 初始化图谱转换器
         transformer = LLMGraphTransformer(
@@ -199,12 +194,11 @@ class KnowledgeBase:
 
         res = transformer.convert_to_graph_documents(docs)
 
+        if not res or len(res) == 0 or res[0].nodes == [] or res[0].relationships == []:
+            raise Exception("创建图谱失败")
+
         worker = Neo4jWorker()
-        worker.save_graphDocuments_in_neo4j(res)
-
-
-
-
+        worker.save_graph_documents_in_neo4j(res)
 
 
 # 使用示例

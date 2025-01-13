@@ -724,25 +724,19 @@ class LLMGraphTransformer:
         return results
     
 if __name__=='__main__':
-    from langchain_community.chat_models import QianfanChatEndpoint
-
-    import os
-    from config import *
-
-    os.environ["QIANFAN_AK"] = QIANFAN_AK
-    os.environ["QIANFAN_SK"] = QIANFAN_SK
-    llm = QianfanChatEndpoint(
-        streaming=True,
-    )
-
-    # from langchain_community.chat_models import ChatOpenAI
+    # from langchain_community.chat_models import QianfanChatEndpoint
     #
-    # llm = ChatOpenAI(
-    #     temperature=0,
-    #     model="gpt-3.5-turbo",
-    #     openai_api_key="aHP78iUOsuamufjyc2lkt0KD0iOFRKfly8fQ74QcdWrPbyrm",
-    #     openai_api_base="https://api.crond.dev/v1"
+    # import os
+    # from config import *
+    #
+    # os.environ["QIANFAN_AK"] = QIANFAN_AK
+    # os.environ["QIANFAN_SK"] = QIANFAN_SK
+    # llm = QianfanChatEndpoint(
+    #     streaming=True,
     # )
+
+    from chat_openai import get_gpt_chatopenai
+    llm = get_gpt_chatopenai()
 
     # 初始化图谱转换器
     transformer = LLMGraphTransformer(

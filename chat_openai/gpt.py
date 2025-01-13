@@ -1,6 +1,7 @@
 from langchain_community.chat_models import ChatOpenAI
 from config import *
 
+
 def get_gpt_chatopenai():
     llm = ChatOpenAI(
         temperature=0,

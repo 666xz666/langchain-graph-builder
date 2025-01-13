@@ -17,16 +17,16 @@ APIHZ_USER_ID = ''
 APIHZ_USER_KEY = ''
 
 #Embedding模型路径
-EMBEDDING_MODEL_PATH = r"D:\xz\WS\langchain-graph-builder\models\multilingual_MiniLM_L12_v2"
+EMBEDDING_MODEL_PATH = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\models\multilingual_MiniLM_L12_v2"
 
 #向量知识库路径
-VEC_BASE_PATH = r"D:\xz\WS\langchain-graph-builder\vec_base"
+VEC_BASE_PATH = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\vec_base"
 
 #Neo4j Vector Index配置
-GRAPH_VEC_BASE_PATH = r"D:\xz\WS\langchain-graph-builder\graph_vec_base"
+GRAPH_VEC_BASE_PATH = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\graph_vec_base"
 
 # 配置日志路径
-LOG_PATH = r"D:\xz\WS\langchain-graph-builder\logs"
+LOG_PATH = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\logs"
 LOG_LEVEL = "DEBUG"  # 这里可以设置为 "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
 
 

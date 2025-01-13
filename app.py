@@ -209,14 +209,15 @@ async def rag_chat(
 @app.post("/create_graph")
 async def create_graph(
     kb_uuid: str = Body(..., description="知识库 UUID", examples=["1"]),
-    allow_nodes: Optional[List[str]] = Body(None, description="允许的节点类型", examples=[["person", "organization"]]),
-    allow_relationships: Optional[List[str]] = Body(None, description="允许的关系类型", examples=[["knows", "work_for"]]),
-    strict_mode: bool = Body(False, description="严格模式", examples=[False])
+    allow_nodes: Optional[List[str]] = Body([], description="允许的节点类型", examples=[["person", "organization"]]),
+    allow_relationships: Optional[List[str]] = Body([], description="允许的关系类型", examples=[["knows", "work_for"]]),
+    strict_mode: bool = Body(False, description="严格模式", examples=[False]),
+    model_name: str = Body("openai", description="图谱抽取模型名称", examples=["openai", "qianfan"])
 ):
     if not kb_uuid:
         raise HTTPException(status_code=400, detail="知识库 UUID 不能为空")
     try:
-        kb.create_graph_kb(kb_uuid, allow_nodes=allow_nodes, allow_relationships=allow_relationships, strict_mode=strict_mode)
+        kb.create_graph_kb(kb_uuid=kb_uuid, model_name=model_name, allow_nodes=allow_nodes, allow_relationships=allow_relationships, strict_mode=strict_mode)
         return {"code": 200, "msg": "知识库图谱创建成功"}
     except Exception as e:
         logging.error(str(e))
