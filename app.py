@@ -4,7 +4,7 @@ from urllib.request import Request
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body, Query
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import confloat
 from fastapi.responses import StreamingResponse
 from typing import List, Optional, Literal
 import os
@@ -142,11 +142,11 @@ async def get_kb_info(
 # 大模型流式对话接口
 @app.post("/chat/chat")
 async def chat_stream(
-    model_name: str = Body("kimi", description="模型名称", examples=["1"]),
+    model_name: Literal[tuple(ALLOWED_CHAT_MODELS)] = Body("kimi", description="模型名称", examples=ALLOWED_CHAT_MODELS),
     system_prompt: str = Body(CHAT_PROMPT, description="系统提示", examples=[CHAT_PROMPT]),
     user_input: str = Body(..., description="用户输入", examples=["1"]),
     history: List[dict] = Body([], description="对话历史", examples=[[{"role": "user", "content": "你好"}]]),
-    temperature: float = Body(0.8, description="温度", examples=[0.8]),
+    temperature: confloat(ge=0.0, le=1.0) = Body(0.8, description="温度", examples=[0.8]),
     max_tokens: int = Body(2048, description="最大 token 数", examples=[2048]),
     stream: bool = Body(True, description="是否流式", examples=[True])
 ):
@@ -170,10 +170,10 @@ async def chat_stream(
 # RAG对话接口
 @app.post("/chat/rag")
 async def rag_chat(
-    model_name: str = Body("kimi", description="模型名称", examples=["1"]),
-    user_input: str = Body(..., description="用户输入", examples=["1"]),
+    model_name: Literal[tuple(ALLOWED_CHAT_MODELS)] = Body("kimi", description="模型名称", examples=ALLOWED_CHAT_MODELS),
+    user_input: str = Body(..., description="用户输入", examples=["你好啊"]),
     history: List[dict] = Body([], description="对话历史", examples=[[{"role": "user", "content": "你好"}]]),
-    temperature: float = Body(0.8, description="温度", examples=[0.8]),
+    temperature: confloat(ge=0.0, le=1.0) = Body(0.8, description="温度", examples=[0.8]),
     max_tokens: int = Body(2048, description="最大 token 数", examples=[2048]),
     stream: bool = Body(True, description="是否流式", examples=[True]),
     top_k: int = Body(5, description="top k", examples=[5]),
@@ -212,7 +212,7 @@ async def create_graph(
     allow_nodes: Optional[List[str]] = Body([], description="允许的节点类型", examples=[["person", "organization"]]),
     allow_relationships: Optional[List[str]] = Body([], description="允许的关系类型", examples=[["knows", "work_for"]]),
     strict_mode: bool = Body(False, description="严格模式", examples=[False]),
-    model_name: str = Body("openai", description="图谱抽取模型名称", examples=["openai", "qianfan"])
+    model_name: Literal[tuple(ALLOWED_GRAPH_MODELS)] = Body("openai", description="图谱抽取模型名称", examples=ALLOWED_GRAPH_MODELS)
 ):
     if not kb_uuid:
         raise HTTPException(status_code=400, detail="知识库 UUID 不能为空")
