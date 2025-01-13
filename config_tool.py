@@ -22,15 +22,18 @@ def config_to_example():
     # 将处理后的内容写入config.py.example
     with open('config.py.example', 'w', encoding='utf-8') as f:
         f.write(hidden_content)
+    print("Sensitive information hidden and saved to config.py.example")
 
 def copy_example():
     if os.path.exists('config.py'):
         print("config.py already exists. Please backup it before running this script.")
+        return
     # 复制config.py.example到config.py
     with open('config.py.example', 'r', encoding='utf-8') as f:
         example_content = f.read()
     with open('config.py', 'w', encoding='utf-8') as f:
         f.write(example_content)
+    print("config.py.example copied to config.py")
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
@@ -42,10 +45,10 @@ if __name__ == '__main__':
     action = sys.argv[1].lower()
     if action == '--hide':
         config_to_example()
-        print("Sensitive information hidden and saved to config.py.example")
+
     elif action == '--copy':
         copy_example()
-        print("config.py.example copied to config.py")
+
     else:
         print("Invalid action. Use 'hide' or 'copy'.")
         sys.exit(1)
