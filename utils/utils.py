@@ -4,6 +4,7 @@ import datetime
 from config import *
 import logging.config
 from langchain_core.documents import Document
+from fastapi import UploadFile
 
 def get_file_name(file_path):
     if os.path.isfile(file_path):
@@ -66,6 +67,24 @@ def create_document_from_item(item):
         }
     )
     return document
+
+async def save_upload_file(file: UploadFile, file_path: str):
+    """
+    将 FastAPI UploadFile 对象保存到指定路径。
+
+    :param file: FastAPI UploadFile 对象
+    :param file_path: 要保存文件的完整路径
+    """
+    # 确保目录存在，如果不存在则创建
+    dir_path = os.path.dirname(file_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+    # 使用 with 语句确保文件正确关闭
+    with open(file_path, "wb") as buffer:
+        # 读取文件内容并写入到目标路径
+        contents = await file.read()
+        buffer.write(contents)
 
 if __name__ == '__main__':
     file_path = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\assets\README.MD"

@@ -7,6 +7,7 @@ from utils import *
 import os
 from graph import LLMGraphTransformer
 from neo4j_worker import Neo4jWorker
+from fastapi import UploadFile
 
 os.environ['NUMEXPR_MAX_THREADS'] = NUMEXPR_MAX_THREADS
 
@@ -60,7 +61,7 @@ class KnowledgeBase:
         else:
             raise Exception(f"知识库 {kb_name} 已存在")
 
-    def upload_file(self, kb_uuid, file_stream, file_name):
+    async def upload_file(self, kb_uuid, file, file_name):
         kb_info = self.kb_metadata.get(kb_uuid)
         if not kb_info:
             raise Exception(f"知识库 UUID {kb_uuid} 不存在")
@@ -69,14 +70,17 @@ class KnowledgeBase:
         file_uuid = str(uuid.uuid4())
         unique_filename = f"{file_uuid}_{file_name}"
         file_path = os.path.join(kb_dir_path, 'files', unique_filename)
-        file_stream.save(file_path)
-
-        kb_info['files'][file_uuid] = {
-            "filename": file_name,
-            "file_path": "files/"+unique_filename
-        }
-        self.save_kb_metadata()
-        return file_uuid
+        try:
+            file.save(file_path)
+        except Exception:
+            await save_upload_file(file, file_path)
+        finally:
+            kb_info['files'][file_uuid] = {
+                "filename": file_name,
+                "file_path": "files/"+unique_filename
+            }
+            self.save_kb_metadata()
+            return file_uuid
 
     def get_file(self, kb_uuid, file_uuid):
         kb_info = self.kb_metadata.get(kb_uuid)
@@ -106,7 +110,7 @@ class KnowledgeBase:
         del self.kb_metadata[kb_uuid]
         self.save_kb_metadata()
 
-    def generate_vectors(self, kb_uuid):
+    def generate_vectors(self, kb_uuid, chunk_size=500, chunk_overlap=100):
         kb_info = self.kb_metadata.get(kb_uuid)
         if not kb_info:
             raise Exception(f"知识库 UUID {kb_uuid} 不存在")
@@ -120,12 +124,19 @@ class KnowledgeBase:
             raise Exception(f"No files to process in knowledge base: {kb_info['kb_name']}")
         processed_files = 0
 
+        init = False
+
         # 处理文件向量化
         for file_uuid, file_info in files.items():
             file_path = os.path.join(kb_dir_path, file_info['file_path'])
+            file_path = file_path.replace("\\", "/")
             source_filename = file_info['filename']
             logging.info(f"Processing file {processed_files + 1}/{total_files}: {file_path}")
-            processor = DocumentProcessor(file_path)
+            processor = DocumentProcessor(file_path, chunck_size=chunk_size, chunk_overlap=chunk_overlap)
+
+            if not init:
+                processor.init_vec(kb_dir_path)
+                init = True
 
             processor.save_file_to_vec(kb_dir_path, source_filename, file_uuid, kb_uuid)
             logging.info(f"File processed successfully: {file_path}")
@@ -158,7 +169,7 @@ class KnowledgeBase:
             self.delete_kb(kb_uuid)
         logging.info(f"Cleared all KBs")
 
-    def crete_graph_kb(self, kb_uuid, allow_nodes=None, allow_relationships=None, strict_mode=False):
+    def create_graph_kb(self, kb_uuid, allow_nodes=None, allow_relationships=None, strict_mode=False):
         vec_metadata = self.get_vec_metadata(kb_uuid)
         if not vec_metadata:
             raise Exception(f"向量库文件不存在: {kb_uuid}")
@@ -173,9 +184,9 @@ class KnowledgeBase:
 
         llm = ChatOpenAI(
             temperature=0,
-            model="gpt-3.5-turbo",
-            openai_api_key="sk-yYmSZsReFPFe09KtH1G1W4UQtzGK4HvkR1hr1yB0yFxpLNnQ",
-            openai_api_base="https://yunwu.ai/v1"
+            model=OPENAI_MODEL,
+            openai_api_key=OPENAI_API_KEY,
+            openai_api_base=OPENAI_BASE_URL
         )
 
         # 初始化图谱转换器
@@ -183,7 +194,7 @@ class KnowledgeBase:
             llm=llm,
             allowed_nodes=allow_nodes,
             allowed_relationships=allow_relationships,
-            strict_mode=False
+            strict_mode=strict_mode
         )
 
         res = transformer.convert_to_graph_documents(docs)

@@ -19,20 +19,13 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import HuggingFaceBgeEmbeddings
 
-# 配置日志
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-
 class DocumentProcessor:
-    def __init__(self, file_path):
+    def __init__(self, file_path, chunck_size=500, chunk_overlap=100):
         self.file_path = file_path
         self.document = None
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500,
-            chunk_overlap=100
+            chunk_size=chunck_size,
+            chunk_overlap=chunk_overlap
         )
         self.embeddings = HuggingFaceBgeEmbeddings(
             model_name=EMBEDDING_MODEL_PATH
@@ -52,6 +45,7 @@ class DocumentProcessor:
 
     def get_loader(self, file_extension):
         loaders = {
+            'txt': TextLoader,
             'md': TextLoader,
             'csv': CSVLoader,
             'xlsx': UnstructuredExcelLoader,
@@ -131,6 +125,16 @@ class DocumentProcessor:
         logging.info(f"Top {k} matches found for query: {user_query}")
         return top_k_matches
 
+    def init_vec(self, kb_dir_path):
+        logging.info(f"Initializing vector library for {kb_dir_path}")
+        vecs_path = os.path.join(kb_dir_path, 'vecs')
+        if not os.path.exists(vecs_path):
+            os.makedirs(vecs_path)
+        output_file = os.path.join(vecs_path, "vecs.json")
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump([], f, ensure_ascii=False, indent=4)
+        logging.info(f"Vector library initialized for {kb_dir_path}")
+
     def save_file_to_vec(self, kb_dir_path, source_filename, source_id, kb_uuid):
         result = self.process_document()
         vecs_path = os.path.join(kb_dir_path, 'vecs')
@@ -143,8 +147,11 @@ class DocumentProcessor:
             item['kb_uuid'] = kb_uuid
 
         output_file = os.path.join(vecs_path, "vecs.json")
+        with open(output_file, 'r', encoding='utf-8') as f:
+            content = json.load(f)
+        content.extend(result)
         with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump(result, f, ensure_ascii=False, indent=4)
+            json.dump(content, f, ensure_ascii=False, indent=4)
         logging.info(f"Processed content saved to {output_file}")
 
 # 示例使用
