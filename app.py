@@ -199,8 +199,8 @@ async def chat_url_info(
             logging.info(res)
 
             if 0 < MAX_URL_NUM < len(res):
-                logging.warning(f"URL 数量超过最大限制 {MAX_URL_NUM}, 仅返回前 {MAX_URL_NUM} 个")
-                yield json.dumps({"code": 200, "type": "warning", "msg": f"URL 数量超过最大限制 {MAX_URL_NUM}, 仅返回前 {MAX_URL_NUM} 个"}, ensure_ascii=False, indent=4) + '\n\n'
+                logging.warning(f"URL 数量超过最大限制 {MAX_URL_NUM}, 仅解析前 {MAX_URL_NUM} 个")
+                yield json.dumps({"code": 200, "type": "warning", "msg": f"URL 数量超过最大限制 {MAX_URL_NUM}, 仅解析前 {MAX_URL_NUM} 个"}, ensure_ascii=False, indent=4) + '\n\n'
                 res = res[:MAX_URL_NUM]
 
             for info in res:
