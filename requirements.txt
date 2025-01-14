@@ -19,4 +19,4 @@ fastapi==0.115.6
 uvicorn==0.34.0
 python-multipart==0.0.20
 duckduckgo-search==7.2.1
-bs4
+bs4==0.0.2
