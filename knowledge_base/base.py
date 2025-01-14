@@ -55,9 +55,13 @@ class KnowledgeBase:
                 "kb_name": kb_name,
                 "kb_dir": kb_dir_name,
                 "desc": desc,
-                "files": {}
+                "files": {},
+                "vec": True,
+                "graph": False
             }
+
             self.save_kb_metadata()
+            self.init_vec(kb_uuid)
             return kb_uuid
         else:
             raise Exception(f"知识库 {kb_name} 已存在")
@@ -123,8 +127,23 @@ class KnowledgeBase:
         output_file = os.path.join(vecs_path, "vecs.json")
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump([], f, ensure_ascii=False, indent=4)
-        logging.info(f"Vector library initialized for {kb_dir_path}")
 
+        self.kb_metadata[kb_uuid]['vec'] = False
+        self.save_kb_metadata()
+
+        logging.info(f"Vector library initialized for {kb_uuid}")
+
+    def init_graph(self, kb_uuid):
+        if not self.kb_metadata[kb_uuid]['graph']:
+            return
+
+        worker = Neo4jWorker()
+        worker.delete_by_uuid(kb_uuid)
+
+        self.kb_metadata[kb_uuid]['graph'] = False
+        self.save_kb_metadata()
+
+        logging.info(f"Graph library initialized for {kb_uuid}")
 
     def generate_vectors(self, kb_uuid, chunk_size=500, chunk_overlap=100):
         kb_info = self.kb_metadata.get(kb_uuid)
@@ -140,7 +159,6 @@ class KnowledgeBase:
             raise Exception(f"No files to process in knowledge base: {kb_info['kb_name']}")
         processed_files = 0
 
-        init = False
 
         # 处理文件向量化
         for file_uuid, file_info in files.items():
@@ -150,14 +168,16 @@ class KnowledgeBase:
             logging.info(f"Processing file {processed_files + 1}/{total_files}: {file_path}")
             processor = DocumentProcessor(file_path, chunck_size=chunk_size, chunk_overlap=chunk_overlap)
 
-            if not init:
+            if kb_info['vec']:
                 self.init_vec(kb_uuid)
-                init = True
 
             processor.save_file_to_vec(kb_dir_path, source_filename, file_uuid, kb_uuid)
             logging.info(f"File processed successfully: {file_path}")
 
             processed_files += 1
+
+        self.kb_metadata[kb_uuid]['vec'] = True
+        self.save_kb_metadata()
 
     def find_top_k_matches_in_kb(self, kb_uuid, user_query, k=5):
         kb_info = self.kb_metadata.get(kb_uuid)
@@ -190,6 +210,9 @@ class KnowledgeBase:
         if not vec_metadata:
             raise Exception(f"向量库文件不存在: {kb_uuid}")
 
+        if self.kb_metadata[kb_uuid]['graph']:
+            self.init_graph(kb_uuid)
+
         docs = []
         for item in vec_metadata:
             logging.debug(item)
@@ -215,16 +238,19 @@ class KnowledgeBase:
         worker = Neo4jWorker()
         worker.save_graph_documents_in_neo4j(res)
 
+        self.kb_metadata[kb_uuid]['graph'] = True
+        self.save_kb_metadata()
+
     def delete_by_level(self, kb_uuid, level):
         if level in ["graph", "vec", "all"]:
-            worker = Neo4jWorker()
-            worker.delete_by_uuid(kb_uuid)
+            self.init_graph(kb_uuid)
         else:
             raise Exception("level参数错误")
         if level in ["vec", "all"]:
             self.init_vec(kb_uuid)
         if level == "all":
             self.delete_kb(kb_uuid)
+        logging.info(f"delete KB: {kb_uuid} successfully, level: {level}")
 
 
 

@@ -86,6 +86,7 @@ async def save_upload_file(file: UploadFile, file_path: str):
         contents = await file.read()
         buffer.write(contents)
 
+
 if __name__ == '__main__':
     file_path = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\assets\README.MD"
     print(get_file_name(file_path))

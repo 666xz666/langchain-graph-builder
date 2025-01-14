@@ -3,6 +3,7 @@ from langchain_community.graphs import Neo4jGraph
 from typing import List
 from langchain_community.graphs.graph_document import GraphDocument
 from config import *
+import logging
 
 class Neo4jWorker:
     def __init__(self):
@@ -16,12 +17,8 @@ class Neo4jWorker:
         Args:
             graph_document_list (List[GraphDocument]): 图文档列表
         """
-        # 将图文档存入数据库
-        # graph.add_graph_documents(graph_document_list, baseEntityLabel=True)
-
-        ###
-        print(graph_document_list)
-
+        for graph_document in graph_document_list:
+            logging.info(graph_document)
         self.graph.add_graph_documents(graph_document_list, True)
 
     def delete_by_uuid(self, kb_uuid: str):
