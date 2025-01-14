@@ -308,7 +308,7 @@ async def graph_rag_chat(
     try:
 
         graph_info = [f"({item['source']}:{','.join(item['source_labels'])})-[{item['rel_type']}]->({item['target']}:{', '.join(item['target_labels'])})" for item in res]
-        system_prompt = GRAPH_CHAT_PROMPT.format(graph=graph_info)
+        system_prompt = GRAPH_CHAT_PROMPT.format(graph='/n'.join(graph_info))
         llm = get_llm(model_name)
 
         async def generate():
