@@ -5,12 +5,16 @@ from config import *
 import logging.config
 from langchain_core.documents import Document
 from fastapi import UploadFile
+import re
+from bs4 import BeautifulSoup
+
 
 def get_file_name(file_path):
     if os.path.isfile(file_path):
         return os.path.splitext(os.path.basename(file_path))[0]
     else:
         return None
+
 
 def get_logging():
     # 创建日志目录
@@ -68,6 +72,7 @@ def create_document_from_item(item):
     )
     return document
 
+
 async def save_upload_file(file: UploadFile, file_path: str):
     """
     将 FastAPI UploadFile 对象保存到指定路径。
@@ -87,6 +92,110 @@ async def save_upload_file(file: UploadFile, file_path: str):
         buffer.write(contents)
 
 
+def extract_url(text) -> list[str]:
+    """
+    从文本中提取 URL。
+
+    :param text: 文本内容
+    :return: 文本中提取到的 URL 列表
+    """
+    regex = re.compile(
+        r'(?:https?|ftp)://(?:\S+(?::\S*)?@)?(?:(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25['
+        r'0-5])){2}\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4])|(?:[a-z¡-￿0-9]+-?)*[a-z¡-￿0-9]+('
+        r'?:\.(?:[a-z¡-￿0-9]+-?)*[a-z¡-￿0-9]+)*\.[a-z¡-￿]{2,})(?::\d{2,'
+        r'5})?(?:/\S*)?',  # path
+        re.IGNORECASE)
+    return re.findall(regex, text)
+
+
+def strip_tags(html):
+    # 使用BeautifulSoup解析HTML
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # 移除所有<script>和<style>标签及其内容
+    for script_or_style in soup(["script", "style"]):
+        script_or_style.decompose()
+
+    # 提取网页中的文本内容
+    text = soup.get_text()
+
+    # 替换所有回车和换行符为一个空格
+    text = text.replace('\n', ' ').replace('\r', ' ')
+    # 替换所有连续空格为一个空格
+    text = re.sub(r'\s+', ' ', text)
+    # 去除首尾空格
+    text = text.strip()
+
+    return text
+
+
+
 if __name__ == '__main__':
-    file_path = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\assets\README.MD"
-    print(get_file_name(file_path))
+    # file_path = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\assets\README.MD"
+    # print(get_file_name(file_path))
+    text = """
+    # langchain-graph-builder
+
+    ## 项目简介
+    
+    langchain-graph-builder 是一个基于 FastAPI 
+    构建的后端服务项目，旨在为知识库的创建、管理以及与之相关的对话功能提供接口支持。通过该项目，用户可以方便地创建知识库、上传文件至知识库、获取文件内容、删除知识库、生成知识库文件向量、获取知识库信息、进行大模型流式对话以及 
+    RAG 对话等操作，同时还支持创建知识库图谱。
+    
+    ## 快速启动
+    
+    ### 1. 配置环境
+    
+    ```shell
+    git clone https://github.com/666xz666/langchain-graph-builder.git
+    cd langchain-graph-builder
+    
+    conda create -n lgb python=3.11 -y
+    conda activate lgb
+    
+    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+    ```
+    
+    ### 2. 复制配置文件
+    
+    ```shell
+    python config_tool.py --copy
+    ```
+    
+    ### 3. 配置模型
+    
+    配置大模型api key
+    
+    embedding模型下载:
+    
+     https://pan.baidu.com/s/1XKQfFnSLbF0AjTLy_BCeFQ?pwd=fkrv 
+    
+    ### 4. 配置neo4j
+    
+    安装neo4j 5.21.0, 配置apoc
+    
+    https://blog.csdn.net/m0_63593482/article/details/133096869
+    
+    ### 5. 配置路径信息
+    
+    知识库存储目录，日志目录, 模型路径等
+    
+    ### 6. 启动app
+    
+    ```shell
+    python app.py
+    ```
+    
+    ## 文档
+    
+    启动后在`<host>:<port>/redoc`能查看文档
+    
+    ![fa48a08dea405ac3d0b043960cb1102](./assets/fa48a08dea405ac3d0b043960cb1102.png)
+    
+    ## Q&A
+    
+    ### 1.  “No module named pwd”（for Windows）
+    
+    https://blog.csdn.net/qq_40821260/article/details/137644996
+    """
+    print(extract_url(text))

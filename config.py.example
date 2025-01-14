@@ -37,6 +37,10 @@ ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'csv', 'xlsx', 'html', 'json'
 ALLOWED_CHAT_MODELS = ['kimi', 'openai']
 ALLOWED_GRAPH_MODELS = ['openai', 'qianfan']
 
+# 单次对话解析URL最大数量
+# -1表示不限制
+MAX_URL_NUM = 5
+
 # 允许上传的文件大小
 MAX_CONTENT_LENGTH = 20 * 1024 * 1024 #20MB
 
@@ -49,7 +53,7 @@ SERVER_PORT = 5000
 SERVER_HOST = "127.0.0.1"
 
 #线程数
-NUMEXPR_MAX_THREADS = '16'
+NUMEXPR_MAX_THREADS = 16
 
 
 

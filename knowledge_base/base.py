@@ -7,9 +7,8 @@ from utils import *
 import os
 from graph import LLMGraphTransformer
 from neo4j_worker import Neo4jWorker
-from fastapi import UploadFile
 
-os.environ['NUMEXPR_MAX_THREADS'] = NUMEXPR_MAX_THREADS
+os.environ['NUMEXPR_MAX_THREADS'] = str(NUMEXPR_MAX_THREADS)
 
 
 class KnowledgeBase:

@@ -11,8 +11,10 @@ import os
 from tempfile import NamedTemporaryFile
 from knowledge_base import KnowledgeBase
 from llms import get_llm
-from prompts import CHAT_PROMPT, RAG_PROMPT
-from config import *
+from prompts import CHAT_PROMPT, RAG_PROMPT, URL_CHAT_PROMPT
+from config import (ALLOWED_EXTENSIONS, MAX_CONTENT_LENGTH,
+                    ALLOWED_CHAT_MODELS, MAX_URL_NUM,
+                    ALLOWED_GRAPH_MODELS, SERVER_HOST, SERVER_PORT)
 import json
 
 from utils import get_logging
@@ -161,6 +163,54 @@ async def chat_stream(
             async for response in llm.get_response(system_prompt, user_input,
                                                    history=history, temperature=temperature,
                                                    max_tokens=max_tokens, stream=stream):
+                yield json.dumps({"code": 200,
+                                  "type": "response",
+                                  "model": model_name,
+                                  "data": response},
+                                 ensure_ascii=False) + '\n\n'
+        return StreamingResponse(generate(), media_type="text/event-stream")
+    except Exception as e:
+        logging.error(str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 分析提问中URL页面信息对话
+@app.post("/chat/url_info")
+async def chat_url_info(
+    model_name: Literal[tuple(ALLOWED_CHAT_MODELS)] = Body("kimi", description="模型名称", examples=ALLOWED_CHAT_MODELS),
+    user_input: str = Body(..., description="用户输入", examples=["1"]),
+    history: List[dict] = Body([], description="对话历史", examples=[[{"role": "user", "content": "你好"}]]),
+    temperature: confloat(ge=0.0, le=1.0) = Body(0.8, description="温度", examples=[0.8]),
+    stream: bool = Body(True, description="是否流式", examples=[True])
+):
+    if not user_input:
+        raise HTTPException(status_code=400, detail="用户输入不能为空")
+    try:
+        llm = get_llm(model_name)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    try:
+        async def generate():
+            from utils import extract_url
+            from search import SearchHelper
+
+            search_helper = SearchHelper()
+            url_list = extract_url(user_input)
+            res = search_helper.get_info_from_url(url_list)
+            logging.info(res)
+
+            if 0 < MAX_URL_NUM < len(res):
+                logging.warning(f"URL 数量超过最大限制 {MAX_URL_NUM}, 仅返回前 {MAX_URL_NUM} 个")
+                yield json.dumps({"code": 200, "type": "warning", "msg": f"URL 数量超过最大限制 {MAX_URL_NUM}, 仅返回前 {MAX_URL_NUM} 个"}, ensure_ascii=False, indent=4) + '\n\n'
+                res = res[:MAX_URL_NUM]
+
+            for info in res:
+                yield json.dumps({"code": 200, "type": "url_info", "msg": "URL 信息", "data": info}, ensure_ascii=False, indent=4) + '\n\n'
+
+            system_prompt = URL_CHAT_PROMPT.format(url_info=res)
+
+            async for response in llm.get_response(system_prompt, user_input,
+                                                   history=history, temperature=temperature,
+                                                   stream=stream):
                 yield json.dumps({"code": 200,
                                   "type": "response",
                                   "model": model_name,
