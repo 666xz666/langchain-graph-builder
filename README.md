@@ -1,6 +1,6 @@
 # langchain-graph-builder
 
-[英文文档](./README_en.md)
+[English documentation](./README_en.md)
 
 ## 项目简介
 
