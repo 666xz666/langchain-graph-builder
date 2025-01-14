@@ -187,12 +187,22 @@ class KnowledgeBase:
         if not os.path.exists(vecs_path):
             raise Exception(f"向量库文件不存在: {vecs_path}")
 
+        logging.info(f"Finding top {k} matches in KB for {user_query}")
+
         # 创建DocumentProcessor实例
         processor = DocumentProcessor("")
         # 调用DocumentProcessor中的find_top_k_matches方法
         top_k_matches = processor.find_top_k_matches(user_query, vecs_path, k)
         logging.info(f"在知识库 {kb_uuid} 中为查询 '{user_query}' 找到前 {k} 个匹配项")
         return top_k_matches
+
+    def find_top_k_matches_in_graph(self, kb_uuid, user_query, k=5):
+        logging.info(f"Finding top {k} matches in graph for {user_query}")
+        vec_list = self.find_top_k_matches_in_kb(kb_uuid, user_query, k)
+        worker = Neo4jWorker()
+        res = worker.get_graph_info(vec_list)
+        logging.info(json.dumps(res, ensure_ascii=False, indent=4))
+        return res
 
     def clear_all_kbs(self):
         logging.info(f"Clearing all KBs")
@@ -251,8 +261,6 @@ class KnowledgeBase:
             self.delete_kb(kb_uuid)
         logging.info(f"delete KB: {kb_uuid} successfully, level: {level}")
 
-
-
 # 使用示例
 if __name__ == "__main__":
     # kb = KnowledgeBase()
@@ -263,6 +271,9 @@ if __name__ == "__main__":
     # kb.delete_kb(kb_uuid)
 
     kb = KnowledgeBase()
+    res = kb.find_top_k_matches_in_graph("f8399208-fd65-4e93-b220-ba7ec216dc72", "lanchain-graph-builder")
+    print(json.dumps(res, indent=4, ensure_ascii=False))
+
     # kb_uuid = "0d5da1ec-9b18-4d5b-b1c2-52ab4d38fd1f"
     # kb_uuid = "46bf6875-d24c-44c3-b33c-ccc30bc19f38"
     # print(kb.has_vec_file(kb_uuid))

@@ -64,6 +64,7 @@ def create_document_from_item(item):
         id=item['id'],
         page_content=item['text'],
         metadata={
+            'id': item['id'],
             'embedding': item['embedding'],
             'source_filename': item['source_filename'],
             'file_uuid': item['file_uuid'],

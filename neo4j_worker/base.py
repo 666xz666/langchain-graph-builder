@@ -4,6 +4,8 @@ from typing import List
 from langchain_community.graphs.graph_document import GraphDocument
 from config import *
 import logging
+import json
+
 
 class Neo4jWorker:
     def __init__(self):
@@ -32,14 +34,55 @@ class Neo4jWorker:
         """
         self.run(query)
 
-
-
-
+    def get_graph_info(self, vec_list):
+        """
+        :param vec_list:
+        :return:
+            [
+                {
+                    "target_labels": [
+                        "function"
+                    ],
+                    "source": "langchain-graph-builder",
+                    "rel_type": "HAS",
+                    "source_labels": [
+                        "tool"
+                    ],
+                    "target": "knowledge base information retrieval"
+                },
+                {
+                    "target_labels": [
+                        "function"
+                    ],
+                    "source": "langchain-graph-builder",
+                    "rel_type": "HAS",
+                    "source_labels": [
+                        "tool"
+                    ],
+                "target": "RAG dialogue"
+                }
+            ]
+        """
+        id_list = [vec[0] for vec in vec_list]
+        query = """
+        MATCH (d:Document)-[]->(n) 
+        WHERE d.id IN $id_list 
+        WITH n 
+        MATCH (n)-[r]->(m) 
+        RETURN collect(distinct {
+            source: n.id, 
+            source_labels: labels(n), 
+            target: m.id, 
+            target_labels: labels(m), 
+            rel_type: type(r)
+        }) as relations
+        """
+        result = self.run(query, {"id_list": id_list})
+        return result[0]['relations']
 
 
 if __name__ == '__main__':
     worker = Neo4jWorker()
-
 
     query = """
     MATCH (d:Document)-[r]->(n)
@@ -61,7 +104,12 @@ if __name__ == '__main__':
     #
     # print(result)
 
-    worker.delete_by_uuid("276e4a6f-8c00-45cf-b6d3-59304698e320")
+    # worker.delete_by_uuid("276e4a6f-8c00-45cf-b6d3-59304698e320")
 
+    vec_list = [
+        (
+            "733150d93c1b40718a2425dfdf76f2fdbb73bedc803919141cc03fc4350b243f",
+            "123"
+        )]
 
-
+    print(json.dumps(worker.get_graph_info(vec_list), indent=4, ensure_ascii=False))
