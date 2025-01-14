@@ -17,7 +17,7 @@ class OpenAIAPI(BaseAI):
             self.messages.insert(0, {"role": "system", "content": system_prompt})
             logging.info(f"Initialized conversation with system prompt: {system_prompt}")
 
-    def get_response(self, prompt, user_input, history=None, temperature=0.3, max_tokens=2048, stream=False):
+    async def get_response(self, prompt, user_input, history=None, temperature=0.3, max_tokens=2048, stream=False):
         """
         获取来自OpenAI的响应。
         参数：
@@ -35,32 +35,29 @@ class OpenAIAPI(BaseAI):
         self.initialize_conversation(prompt)  # 注意：这会每次都添加系统提示到消息列表中，可能不是你想要的行为。
         logging.info(f"User input: {user_input}")
 
-        try:
-            completion = self.client.chat.completions.create(
-                model=OPENAI_MODEL,
-                messages=self.messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                stream=stream
-            )
+        completion = self.client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=self.messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stream=stream
+        )
 
-            content_text = ""
-            if stream:
-                logging.info("OpenAI: (streaming)")
-                for chunk in completion:
-                    delta = chunk.choices[0].delta
-                    if hasattr(delta, 'content') and delta.content is not None:
-                        content_text += delta.content
-                        logging.info(delta.content, extra={'streaming': True})
-            else:
-                content_text = completion.choices[0].message.content.strip()
-                logging.info(f"OpenAI: {content_text}")
+        content_text = ""
+        if stream:
+            logging.info("OpenAI: (streaming)")
+            for chunk in completion:
+                delta = chunk.choices[0].delta
+                if hasattr(delta, 'content') and delta.content is not None:
+                    content_text += delta.content
+                    logging.info(delta.content, extra={'streaming': True})
+                    yield delta.content
+            logging.info(f"OpenAI: {content_text}")
+        else:
+            content_text = completion.choices[0].message.content.strip()
+            logging.info(f"OpenAI: {content_text}")
+            yield content_text
 
-            self.messages.append({'role': 'assistant', 'content': content_text})
-            return content_text
-        except Exception as e:
-            logging.error(f"An error occurred while getting response from OpenAI: {e}")
-            return None
 
 if __name__ == "__main__":
     system_prompt = "你是通义，由阿里云开发的人工智能助手。"

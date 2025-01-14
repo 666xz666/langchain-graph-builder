@@ -157,11 +157,15 @@ async def chat_stream(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     try:
-        def generate():
-            # 将 history 参数传递给 get_response 方法
-            response = llm.get_response(system_prompt, user_input, history=history, temperature=temperature,
-                                        max_tokens=max_tokens, stream=stream)
-            yield json.dumps({"code": 200, "data": response}) + '\n\n'
+        async def generate():
+            async for response in llm.get_response(system_prompt, user_input,
+                                                   history=history, temperature=temperature,
+                                                   max_tokens=max_tokens, stream=stream):
+                yield json.dumps({"code": 200,
+                                  "type": "response",
+                                  "model": model_name,
+                                  "data": response},
+                                 ensure_ascii=False) + '\n\n'
         return StreamingResponse(generate(), media_type="text/event-stream")
     except Exception as e:
         logging.error(str(e))
@@ -191,15 +195,20 @@ async def rag_chat(
         knowledges = "\n".join([match[1] for match in res])
         system_prompt = RAG_PROMPT.format(knowledges=knowledges)
         llm = get_llm(model_name)
-        def generate():
-            yield json.dumps({"code": 200, "msg": "匹配结果", "data": res}) + '\n\n'
+        async def generate():
+            for match in res:
+                yield json.dumps({"code": 200, "type": "match", "msg": "匹配结果", "data": match}, ensure_ascii=False) + '\n\n'
             knowledges = ""
             for match in res:
                 knowledges += f"{match[1]}\n"
-            # 将 history 参数传递给 get_response 方法
-            response = llm.get_response(system_prompt, user_input, history=history, temperature=temperature,
-                                        max_tokens=max_tokens, stream=stream)
-            yield json.dumps({"code": 200, "data": response}) + '\n\n'
+            async for response in llm.get_response(system_prompt, user_input,
+                                                   history=history, temperature=temperature,
+                                                   max_tokens=max_tokens, stream=stream):
+                yield json.dumps({"code": 200,
+                                  "type": "response",
+                                  "model": model_name,
+                                  "data": response},
+                                 ensure_ascii=False) + '\n\n'
         return StreamingResponse(generate(), media_type="text/event-stream")
     except Exception as e:
         logging.error(str(e))

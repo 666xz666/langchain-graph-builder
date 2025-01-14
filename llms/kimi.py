@@ -16,7 +16,7 @@ class KimiAI(BaseAI):
         logging.info(f"Initialized conversation with system prompt: {system_prompt}")
 
 
-    def get_response(self, prompt, user_input, history=None, temperature=0.3, max_tokens=2048, stream=False):
+    async def get_response(self, prompt, user_input, history=None, temperature=0.3, max_tokens=2048, stream=False):
         if not history or history != []:
             self.messages.extend(history)
         self.messages.append({"role": "user", "content": user_input})
@@ -39,13 +39,13 @@ class KimiAI(BaseAI):
                 if delta.content:
                     content_text += delta.content
                     logging.info(delta.content, extra={'streaming': True})
+                    yield delta.content  # 直接yield每个数据块
             logging.info(f"Kimi AI: {content_text}")
         else:
             content_text = completion.choices[0].message.content
             logging.info(f"Kimi AI: {content_text}")
+            yield content_text  # 对于非流式响应，一次性yield整个内容
 
-        self.messages.append({'role': 'assistant', 'content': content_text})
-        return content_text
 
 if __name__ == "__main__":
 

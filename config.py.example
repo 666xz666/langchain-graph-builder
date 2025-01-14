@@ -27,7 +27,7 @@ GRAPH_VEC_BASE_PATH = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-b
 
 # 配置日志路径
 LOG_PATH = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\logs"
-LOG_LEVEL = "DEBUG"  # 这里可以设置为 "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
+LOG_LEVEL = "INFO"  # 这里可以设置为 "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
 
 
 # 允许上传的文件类型
