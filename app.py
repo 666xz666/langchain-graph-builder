@@ -55,7 +55,11 @@ kb = KnowledgeBase()
 
 
 # 创建知识库接口
-@app.post("/create_kb")
+@app.post(
+    "/create_kb",
+    tags=["knowledge_base"],
+    summary="创建知识库",
+)
 async def create_kb(
         kb_name: str = Body(..., description="知识库名称", examples=["1"]),
         desc: Optional[str] = Body(None, description="知识库描述", examples=["1"])
@@ -71,7 +75,11 @@ async def create_kb(
 
 
 # 向指定知识库上传文件接口
-@app.post("/upload_file")
+@app.post(
+    "/upload_file",
+    tags=["knowledge_base"],
+    summary="上传文件",
+)
 async def upload_file(
         kb_uuid: str = Form(..., description="知识库 UUID"),
         file: UploadFile = File(..., description="上传的文件")
@@ -91,7 +99,11 @@ async def upload_file(
 
 
 # 获取文件内容接口
-@app.get("/get_file")
+@app.get(
+    "/get_file",
+    tags=["knowledge_base"],
+    summary="获取文件内容",
+)
 async def get_file(
         file_uuid: str = Query(..., description="文件 UUID", examples=["1"]),
         kb_uuid: str = Query(..., description="知识库 UUID", examples=["1"])
@@ -107,8 +119,12 @@ async def get_file(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-# 删除指定知识库接口
-@app.post("/delete_kb")
+# 按不同level删除指定知识库接口
+@app.post(
+    "/delete_kb",
+    tags=["knowledge_base"],
+    summary="按不同level删除知识库",
+)
 async def delete_kb(
         kb_uuid: str = Body(..., description="知识库 UUID", examples=["1"]),
         level: Literal["graph", "vec", "all"] = Body("all", description="删除级别", examples=["graph", "vec", "all"])
@@ -123,7 +139,11 @@ async def delete_kb(
 
 
 # 用指定uuid知识库现有文件生成向量接口
-@app.post("/generate_vectors")
+@app.post(
+    "/generate_vectors",
+    tags=["knowledge_base"],
+    summary="生成向量",
+)
 async def generate_vectors(
         kb_uuid: str = Body(..., description="知识库 UUID", examples=["1"]),
         chunk_size: int = Body(500, description="分块大小", examples=[500]),
@@ -138,9 +158,39 @@ async def generate_vectors(
         logging.error(str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
+# 创建知识库图谱接口
+@app.post(
+    "/create_graph",
+    tags=["knowledge_base"],
+    summary="创建知识图谱",
+)
+async def create_graph(
+        kb_uuid: str = Body(..., description="知识库 UUID", examples=["1"]),
+        allow_nodes: Optional[List[str]] = Body([], description="允许的节点类型",
+                                                examples=[["person", "organization"]]),
+        allow_relationships: Optional[List[str]] = Body([], description="允许的关系类型",
+                                                        examples=[["knows", "work_for"]]),
+        strict_mode: bool = Body(False, description="严格模式", examples=[False]),
+        model_name: Literal[tuple(ALLOWED_GRAPH_MODELS)] = Body("openai", description="图谱抽取模型名称",
+                                                                examples=ALLOWED_GRAPH_MODELS)
+):
+    if not kb_uuid:
+        raise HTTPException(status_code=400, detail="知识库 UUID 不能为空")
+    try:
+        kb.create_graph_kb(kb_uuid=kb_uuid, model_name=model_name, allow_nodes=allow_nodes,
+                           allow_relationships=allow_relationships, strict_mode=strict_mode)
+        return {"code": 200, "msg": "知识库图谱创建成功"}
+    except Exception as e:
+        logging.error(str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # 返回数据库信息接口
-@app.get("/get_kb_info")
+@app.get(
+    "/get_kb_info",
+    tags=["knowledge_base"],
+    summary="获取数据库信息",
+)
 async def get_kb_info(
         kb_uuid: str = Query(..., description="知识库 UUID", examples=["1"])
 ):
@@ -152,7 +202,11 @@ async def get_kb_info(
 
 
 # 大模型流式对话接口
-@app.post("/chat/chat")
+@app.post(
+    "/chat/chat",
+    tags=["chat"],
+    summary="大模型流式对话",
+)
 async def chat_stream(
         model_name: Literal[tuple(ALLOWED_CHAT_MODELS)] = Body("kimi", description="模型名称",
                                                                examples=ALLOWED_CHAT_MODELS),
@@ -187,7 +241,11 @@ async def chat_stream(
 
 
 # 分析提问中URL页面信息对话
-@app.post("/chat/url_info")
+@app.post(
+    "/chat/url_info",
+    tags=["chat"],
+    summary="分析提问中URL页面信息对话",
+)
 async def chat_url_info(
         model_name: Literal[tuple(ALLOWED_CHAT_MODELS)] = Body("kimi", description="模型名称",
                                                                examples=ALLOWED_CHAT_MODELS),
@@ -241,7 +299,11 @@ async def chat_url_info(
 
 
 # RAG对话接口
-@app.post("/chat/rag")
+@app.post(
+    "/chat/rag",
+    tags=["chat"],
+    summary="RAG对话",
+)
 async def rag_chat(
         model_name: Literal[tuple(ALLOWED_CHAT_MODELS)] = Body("kimi", description="模型名称",
                                                                examples=ALLOWED_CHAT_MODELS),
@@ -285,7 +347,12 @@ async def rag_chat(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/chat/graph_rag")
+# GraphRAG对话接口
+@app.post(
+    "/chat/graph_rag",
+    tags=["chat"],
+    summary="GraphRAG对话",
+)
 async def graph_rag_chat(
         model_name: Literal[tuple(ALLOWED_CHAT_MODELS)] = Body("kimi", description="模型名称",
                                                                examples=ALLOWED_CHAT_MODELS),
@@ -307,7 +374,9 @@ async def graph_rag_chat(
         raise HTTPException(status_code=500, detail=str(e))
     try:
 
-        graph_info = [f"({item['source']}:{','.join(item['source_labels'])})-[{item['rel_type']}]->({item['target']}:{', '.join(item['target_labels'])})" for item in res]
+        graph_info = [
+            f"({item['source']}:{','.join(item['source_labels'])})-[{item['rel_type']}]->({item['target']}:{', '.join(item['target_labels'])})"
+            for item in res]
         system_prompt = GRAPH_CHAT_PROMPT.format(graph='/n'.join(graph_info))
         llm = get_llm(model_name)
 
@@ -330,27 +399,7 @@ async def graph_rag_chat(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# 创建知识库图谱接口
-@app.post("/create_graph")
-async def create_graph(
-        kb_uuid: str = Body(..., description="知识库 UUID", examples=["1"]),
-        allow_nodes: Optional[List[str]] = Body([], description="允许的节点类型",
-                                                examples=[["person", "organization"]]),
-        allow_relationships: Optional[List[str]] = Body([], description="允许的关系类型",
-                                                        examples=[["knows", "work_for"]]),
-        strict_mode: bool = Body(False, description="严格模式", examples=[False]),
-        model_name: Literal[tuple(ALLOWED_GRAPH_MODELS)] = Body("openai", description="图谱抽取模型名称",
-                                                                examples=ALLOWED_GRAPH_MODELS)
-):
-    if not kb_uuid:
-        raise HTTPException(status_code=400, detail="知识库 UUID 不能为空")
-    try:
-        kb.create_graph_kb(kb_uuid=kb_uuid, model_name=model_name, allow_nodes=allow_nodes,
-                           allow_relationships=allow_relationships, strict_mode=strict_mode)
-        return {"code": 200, "msg": "知识库图谱创建成功"}
-    except Exception as e:
-        logging.error(str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 if __name__ == "__main__":
