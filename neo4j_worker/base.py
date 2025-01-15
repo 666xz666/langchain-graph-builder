@@ -25,14 +25,23 @@ class Neo4jWorker:
 
     def delete_by_uuid(self, kb_uuid: str):
         query = f"""
-        MATCH (d:Document) WHERE d.kb_uuid = '{kb_uuid}'
-        WITH d
-        MATCH (d)-[]->(n)
-        WITH n, d
-        MATCH (n)-[r]-()
-        DELETE r, n, d 
-        """
+           MATCH (d:Document)-[r0]->(m) WHERE d.kb_uuid = '{kb_uuid}'
+           WITH d, r0
+           MATCH (d)-[]->(n)
+           WITH n, d, r0
+           OPTIONAL MATCH (other_d:Document)-[]->(n) WHERE other_d.kb_uuid <> d.kb_uuid
+           WITH n, d, COUNT(other_d) AS other_count, r0
+           WHERE other_count = 0
+           MATCH (n)-[r]-()
+           DELETE r0, r, n, d
+           """
+        query1 = f"""
+           MATCH (d:Document)-[r]->()
+           WHERE d.kb_uuid = '{kb_uuid}'
+           DELETE r, d
+           """
         self.run(query)
+        self.run(query1)
 
     def get_graph_info(self, vec_list):
         """
