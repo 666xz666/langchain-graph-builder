@@ -17,7 +17,7 @@ try:
     }
 
     # 发送 POST 请求
-    response = requests.post(url, headers=headers, json=data, stream=True)
+    response = requests.post(url, headers=headers, json=data, stream=False)
 
     # 解析 JSON 响应
     response_data = response.json()

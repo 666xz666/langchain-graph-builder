@@ -182,6 +182,7 @@ class KnowledgeBase:
             processor = DocumentProcessor(file_path, chunck_size=chunk_size, chunk_overlap=chunk_overlap)
 
             if kb_info['vec']:
+                self.init_graph(kb_uuid)
                 self.init_vec(kb_uuid)
 
             processor.save_file_to_vec(kb_dir_path, source_filename, file_uuid, kb_uuid)
@@ -285,8 +286,8 @@ if __name__ == "__main__":
     # kb.delete_kb(kb_uuid)
 
     kb = KnowledgeBase()
-    res = kb.find_top_k_matches_in_graph("f8399208-fd65-4e93-b220-ba7ec216dc72", "lanchain-graph-builder")
-    print(json.dumps(res, indent=4, ensure_ascii=False))
+    # res = kb.find_top_k_matches_in_graph("f8399208-fd65-4e93-b220-ba7ec216dc72", "lanchain-graph-builder")
+    # print(json.dumps(res, indent=4, ensure_ascii=False))
 
     # kb_uuid = "0d5da1ec-9b18-4d5b-b1c2-52ab4d38fd1f"
     # kb_uuid = "46bf6875-d24c-44c3-b33c-ccc30bc19f38"
