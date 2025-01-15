@@ -187,15 +187,13 @@ async def create_graph(
 
 # 返回数据库信息接口
 @app.get(
-    "/get_kb_info",
+    "/list_kb_info",
     tags=["knowledge_base"],
     summary="获取数据库信息",
 )
-async def get_kb_info(
-        kb_uuid: str = Query(..., description="知识库 UUID", examples=["1"])
-):
+async def get_kb_info():
     try:
-        db_info = kb.get_kb_info(kb_uuid)
+        db_info = kb.list_kb_info()
         return {"code": 200, "msg": "数据库信息获取成功", "db_info": db_info}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

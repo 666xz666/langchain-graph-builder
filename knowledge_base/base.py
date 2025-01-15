@@ -104,6 +104,20 @@ class KnowledgeBase:
             raise Exception(f"知识库 UUID {kb_uuid} 不存在")
         return kb_info
 
+    def list_kb_info(self):
+        kb_info_list = []
+        for kb_uuid, item in self.kb_metadata.items():
+            kb_info={}
+            kb_info['kb_uuid'] = kb_uuid
+            kb_info['kb_name'] = item['kb_name']
+            kb_info['desc'] = item['desc']
+            kb_info['vec'] = item['vec']
+            kb_info['graph'] = item['graph']
+            kb_info['files'] = [{'file_uuid': file_uuid, 'filename': file_info['filename']} for file_uuid, file_info in item['files'].items()]
+            kb_info_list.append(kb_info)
+        return kb_info_list
+
+
     def delete_kb(self, kb_uuid):
         kb_info = self.kb_metadata.get(kb_uuid)
         if not kb_info:
