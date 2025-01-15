@@ -6,6 +6,8 @@
 
 langchain-graph-builder is a backend service project built with FastAPI, designed to provide API support for the creation, management, and dialogue-related functions of knowledge bases. Through this project, users can conveniently create knowledge bases, upload files to knowledge bases, retrieve file content, delete knowledge bases, generate knowledge base file vectors, obtain knowledge base information, engage in large model stream dialogue, and RAG/GraphRAG dialogue, as well as create knowledge base graphs.
 
+![2b882cb22ba101d4ed8d4fc0adf9d0a](./assets/2b882cb22ba101d4ed8d4fc0adf9d0a.png)
+
 ## Implemented Features
 
 ### 1. Knowledge Base
