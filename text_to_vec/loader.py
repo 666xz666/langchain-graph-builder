@@ -19,6 +19,7 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import HuggingFaceBgeEmbeddings
 
+
 class DocumentProcessor:
     def __init__(self, file_path, chunck_size=500, chunk_overlap=100):
         self.file_path = file_path
@@ -113,7 +114,8 @@ class DocumentProcessor:
         similarities = []
         for entry in vector_library:
             embedding = np.array(entry['embedding'])
-            similarity = np.dot(user_query_embedding, embedding) / (np.linalg.norm(user_query_embedding) * np.linalg.norm(embedding))
+            similarity = np.dot(user_query_embedding, embedding) / (
+                        np.linalg.norm(user_query_embedding) * np.linalg.norm(embedding))
             similarities.append((entry['id'], entry['text'], similarity))
         logging.info("Cosine similarities calculated")
         return similarities
@@ -145,6 +147,7 @@ class DocumentProcessor:
             json.dump(content, f, ensure_ascii=False, indent=4)
         logging.info(f"Processed content saved to {output_file}")
 
+
 # 示例使用
 if __name__ == "__main__":
     file_paths = [
@@ -175,5 +178,3 @@ if __name__ == "__main__":
     logging.info(f"Top 5 matches for the query '{user_query}':")
     for match in top_k_matches:
         logging.info(f"ID: {match[0]}, Text: {match[1]}, Similarity: {match[2]}")
-
-
