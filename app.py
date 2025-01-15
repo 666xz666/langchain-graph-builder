@@ -338,6 +338,18 @@ async def rag_chat(
                                        "model": model_name,
                                        "data": response})
 
+            yield stream_response({"code": 200,
+                                   "type": "response",
+                                   "model": model_name,
+                                   "data": '\n\n## 匹配结果：\n'})
+
+            index = 1
+            for match in res:
+                code_block = f"```\n{match[1]}\n```"
+                yield stream_response({"code": 200, "type": "match", "msg": f"匹配{index}结果", "data": f'{index}.\"\n' + code_block + f'\n\"\n相似度:{match[2]}\n'})
+                index += 1
+
+
         return StreamingResponse(generate(), media_type="text/event-stream")
     except Exception as e:
         logging.error(str(e))
