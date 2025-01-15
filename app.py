@@ -1,7 +1,7 @@
 from io import BytesIO
 from urllib.request import Request
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body, Query
+from fastapi import FastAPI, UploadFile, File, Form, Body, Query
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import confloat
@@ -65,13 +65,13 @@ async def create_kb(
         desc: Optional[str] = Body(None, description="知识库描述", examples=["1"])
 ):
     if not kb_name:
-        raise HTTPException(status_code=400, detail="知识库名称不能为空")
+        return {"code": 400, "msg": "知识库名称不能为空"}
     desc = desc or ""
     try:
         kb_uuid = kb.create_kb(kb_name, desc)
         return {"code": 200, "msg": f"知识库 {kb_name} 创建成功", "kb_uuid": kb_uuid}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return {"code": 500, "msg": str(e)}
 
 
 # 向指定知识库上传文件接口
@@ -85,17 +85,17 @@ async def upload_file(
         file: UploadFile = File(..., description="上传的文件")
 ):
     if not kb_uuid:
-        raise HTTPException(status_code=400, detail="知识库 UUID 不能为空")
+        return {"code": 400, "msg": "知识库 UUID 不能为空"}
     if not file:
-        raise HTTPException(status_code=400, detail="未上传文件")
+        return {"code": 400, "msg": "未上传文件"}
     extension = file.filename.split('.')[-1]
     if extension not in ALLOWED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail="不支持的文件类型")
+        return {"code": 400, "msg": "不支持的文件类型"}
     try:
         file_uuid = await kb.upload_file(kb_uuid, file, file.filename)
         return {"code": 200, "msg": "文件上传成功", "file_uuid": file_uuid}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return {"code": 500, "msg": str(e)}
 
 
 # 获取文件内容接口
@@ -109,14 +109,14 @@ async def get_file(
         kb_uuid: str = Query(..., description="知识库 UUID", examples=["1"])
 ):
     if not file_uuid:
-        raise HTTPException(status_code=400, detail="文件 UUID 不能为空")
+        return {"code": 400, "msg": "文件 UUID 不能为空"}
     try:
         file_path = kb.get_file(kb_uuid, file_uuid)
         logging.info(f"File path: {file_path}")
         return FileResponse(file_path)
     except Exception as e:
         logging.error(str(e))
-        raise HTTPException(status_code=404, detail=str(e))
+        return {"code": 500, "msg": str(e)}
 
 
 # 按不同level删除指定知识库接口
@@ -130,12 +130,13 @@ async def delete_kb(
         level: Literal["graph", "vec", "all"] = Body("all", description="删除级别", examples=["graph", "vec", "all"])
 ):
     if not kb_uuid:
-        raise HTTPException(status_code=400, detail="知识库 UUID 不能为空")
+        return {"code": 400, "msg": "知识库 UUID 不能为空"}
     try:
         kb.delete_by_level(kb_uuid, level)
         return {"code": 200, "msg": "知识库删除成功"}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+
+        return {"code": 500, "msg": str(e)}
 
 
 # 用指定uuid知识库现有文件生成向量接口
@@ -150,13 +151,15 @@ async def generate_vectors(
         chunk_overlap: int = Body(100, description="分块重叠", examples=[100])
 ):
     if not kb_uuid:
-        raise HTTPException(status_code=400, detail="知识库 UUID 不能为空")
+        return {"code": 400, "msg": "知识库 UUID 不能为空"}
     try:
         kb.generate_vectors(kb_uuid, chunk_size, chunk_overlap)
         return {"code": 200, "msg": "知识库中的所有文件已成功向量化"}
     except Exception as e:
         logging.error(str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+
+        return {"code": 500, "msg": str(e)}
+
 
 # 创建知识库图谱接口
 @app.post(
@@ -175,14 +178,15 @@ async def create_graph(
                                                                 examples=ALLOWED_GRAPH_MODELS)
 ):
     if not kb_uuid:
-        raise HTTPException(status_code=400, detail="知识库 UUID 不能为空")
+        return {"code": 400, "msg": "知识库 UUID 不能为空"}
     try:
         kb.create_graph_kb(kb_uuid=kb_uuid, model_name=model_name, allow_nodes=allow_nodes,
                            allow_relationships=allow_relationships, strict_mode=strict_mode)
         return {"code": 200, "msg": "知识库图谱创建成功"}
     except Exception as e:
         logging.error(str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+
+        return {"code": 500, "msg": str(e)}
 
 
 # 返回数据库信息接口
@@ -196,7 +200,8 @@ async def get_kb_info():
         db_info = kb.list_kb_info()
         return {"code": 200, "msg": "数据库信息获取成功", "db_info": db_info}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
+        return {"code": 500, "msg": str(e)}
 
 
 # 大模型流式对话接口
@@ -216,11 +221,12 @@ async def chat_stream(
         stream: bool = Body(True, description="是否流式", examples=[True])
 ):
     if not user_input:
-        raise HTTPException(status_code=400, detail="用户输入不能为空")
+        return {"code": 400, "msg": "用户输入不能为空"}
     try:
         llm = get_llm(model_name)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+
+        return {"code": 400, "msg": str(e)}
     try:
         async def generate():
             async for response in llm.get_response(system_prompt, user_input,
@@ -235,7 +241,8 @@ async def chat_stream(
         return StreamingResponse(generate(), media_type="text/event-stream")
     except Exception as e:
         logging.error(str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+
+        return {"code": 500, "msg": str(e)}
 
 
 # 分析提问中URL页面信息对话
@@ -253,11 +260,12 @@ async def chat_url_info(
         stream: bool = Body(True, description="是否流式", examples=[True])
 ):
     if not user_input:
-        raise HTTPException(status_code=400, detail="用户输入不能为空")
+        return {"code": 400, "msg": "用户输入不能为空"}
     try:
         llm = get_llm(model_name)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+
+        return {"code": 400, "msg": str(e)}
     try:
         async def generate():
             from utils import extract_url
@@ -293,7 +301,8 @@ async def chat_url_info(
         return StreamingResponse(generate(), media_type="text/event-stream")
     except Exception as e:
         logging.error(str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+
+        return {"code": 500, "msg": str(e)}
 
 
 # RAG对话接口
@@ -314,13 +323,14 @@ async def rag_chat(
         kb_uuid: str = Body(..., description="知识库 UUID", examples=["1"])
 ):
     if not user_input:
-        raise HTTPException(status_code=400, detail="用户输入不能为空")
+        return {"code": 400, "msg": "用户输入不能为空"}
     if not kb_uuid:
-        raise HTTPException(status_code=400, detail="知识库 UUID 不能为空")
+        return {"code": 400, "msg": "知识库 UUID 不能为空"}
     try:
         res = kb.find_top_k_matches_in_kb(kb_uuid, user_input, top_k)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
+        return {"code": 500, "msg": str(e)}
     try:
         knowledges = "\n".join([match[1] for match in res])
         system_prompt = RAG_PROMPT.format(knowledges=knowledges)
@@ -342,7 +352,7 @@ async def rag_chat(
         return StreamingResponse(generate(), media_type="text/event-stream")
     except Exception as e:
         logging.error(str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"code": 500, "msg": str(e)}
 
 
 # GraphRAG对话接口
@@ -363,13 +373,13 @@ async def graph_rag_chat(
         kb_uuid: str = Body(..., description="知识库 UUID", examples=["1"])
 ):
     if not user_input:
-        raise HTTPException(status_code=400, detail="用户输入不能为空")
+        return {"code": 400, "msg": "用户输入不能为空"}
     if not kb_uuid:
-        raise HTTPException(status_code=400, detail="知识库 UUID 不能为空")
+        return {"code": 400, "msg": "知识库 UUID 不能为空"}
     try:
         res = kb.find_top_k_matches_in_graph(kb_uuid, user_input, top_k)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"code": 500, "msg": str(e)}
     try:
 
         graph_info = [
@@ -394,10 +404,7 @@ async def graph_rag_chat(
         return StreamingResponse(generate(), media_type="text/event-stream")
     except Exception as e:
         logging.error(str(e))
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-
+        return {"code": 500, "msg": str(e)}
 
 
 if __name__ == "__main__":
