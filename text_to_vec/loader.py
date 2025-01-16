@@ -17,8 +17,7 @@ from langchain.document_loaders import (
 )
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import HuggingFaceBgeEmbeddings
-
+from embedding_models import embedding_loader
 
 class DocumentProcessor:
     def __init__(self, file_path, chunck_size=500, chunk_overlap=100):
@@ -28,9 +27,7 @@ class DocumentProcessor:
             chunk_size=chunck_size,
             chunk_overlap=chunk_overlap
         )
-        self.embeddings = HuggingFaceBgeEmbeddings(
-            model_name=EMBEDDING_MODEL_PATH
-        )
+        self.embeddings = embedding_loader.get_embedding_model()
         self.vec_base_dir = VEC_BASE_PATH
 
     def load_document(self):

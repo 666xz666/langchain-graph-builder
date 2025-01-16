@@ -478,6 +478,10 @@ async def graph_rag_chat(
 
 
 if __name__ == "__main__":
-    import uvicorn
+    logging.info("加载 embedding 模型...")
+    from embedding_models import embedding_loader
+    embedding_loader.load_embedding_models()
+    logging.info("加载 embedding 模型完成")
 
+    import uvicorn
     uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT)
