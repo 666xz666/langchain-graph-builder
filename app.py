@@ -374,7 +374,7 @@ async def rag_chat(
         temperature: confloat(ge=0.0, le=1.0) = Body(0.8, description="温度", examples=[0.8]),
         max_tokens: int = Body(2048, description="最大 token 数", examples=[2048]),
         stream: bool = Body(True, description="是否流式", examples=[True]),
-        top_k: int = Body(5, description="top k", examples=[5]),
+        top_k: int = Body(3, description="top k", examples=[3]),
         kb_uuid: str = Body(..., description="知识库 UUID", examples=["1"])
 ):
     if not user_input:
@@ -433,7 +433,7 @@ async def graph_rag_chat(
         temperature: confloat(ge=0.0, le=1.0) = Body(0.8, description="温度", examples=[0.8]),
         max_tokens: int = Body(2048, description="最大 token 数", examples=[2048]),
         stream: bool = Body(True, description="是否流式", examples=[True]),
-        top_k: int = Body(5, description="top k", examples=[5]),
+        top_k: int = Body(3, description="top k", examples=[3]),
         kb_uuid: str = Body(..., description="知识库 UUID", examples=["1"])
 ):
     if not user_input:
