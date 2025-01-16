@@ -273,7 +273,6 @@ async def chat_stream(
         user_input: str = Body(..., description="用户输入", examples=["1"]),
         history: List[dict] = Body([], description="对话历史", examples=[[{"role": "user", "content": "你好"}]]),
         temperature: confloat(ge=0.0, le=1.0) = Body(0.8, description="温度", examples=[0.8]),
-        max_tokens: int = Body(2048, description="最大 token 数", examples=[2048]),
         stream: bool = Body(True, description="是否流式", examples=[True])
 ):
     if not user_input:
@@ -286,7 +285,7 @@ async def chat_stream(
         async def generate():
             async for response in llm.get_response(system_prompt, user_input,
                                                    history=history, temperature=temperature,
-                                                   max_tokens=max_tokens, stream=stream):
+                                                   stream=stream):
                 yield stream_response({"code": 200,
                                        "type": "response",
                                        "model": model_name,
@@ -372,7 +371,6 @@ async def rag_chat(
         user_input: str = Body(..., description="用户输入", examples=["你好啊"]),
         history: List[dict] = Body([], description="对话历史", examples=[[{"role": "user", "content": "你好"}]]),
         temperature: confloat(ge=0.0, le=1.0) = Body(0.8, description="温度", examples=[0.8]),
-        max_tokens: int = Body(2048, description="最大 token 数", examples=[2048]),
         stream: bool = Body(True, description="是否流式", examples=[True]),
         top_k: int = Body(3, description="top k", examples=[3]),
         kb_uuid: str = Body(..., description="知识库 UUID", examples=["1"])
@@ -394,8 +392,7 @@ async def rag_chat(
             # yield stream_response({"code": 200, "type": "match", "msg": "匹配结果", "data": res})
 
             async for response in llm.get_response(system_prompt, user_input,
-                                                   history=history, temperature=temperature,
-                                                   max_tokens=max_tokens, stream=stream):
+                                                   history=history, temperature=temperature, stream=stream):
                 yield stream_response({"code": 200,
                                        "type": "response",
                                        "model": model_name,
@@ -431,7 +428,6 @@ async def graph_rag_chat(
         user_input: str = Body(..., description="用户输入", examples=["你好啊"]),
         history: List[dict] = Body([], description="对话历史", examples=[[{"role": "user", "content": "你好"}]]),
         temperature: confloat(ge=0.0, le=1.0) = Body(0.8, description="温度", examples=[0.8]),
-        max_tokens: int = Body(2048, description="最大 token 数", examples=[2048]),
         stream: bool = Body(True, description="是否流式", examples=[True]),
         top_k: int = Body(3, description="top k", examples=[3]),
         kb_uuid: str = Body(..., description="知识库 UUID", examples=["1"])
@@ -457,8 +453,7 @@ async def graph_rag_chat(
             #     yield stream_response({"code": 200, "type": "match", "msg": "匹配结果", "data": match})
 
             async for response in llm.get_response(system_prompt, user_input,
-                                                   history=history, temperature=temperature,
-                                                   max_tokens=max_tokens, stream=stream):
+                                                   history=history, temperature=temperature, stream=stream):
                 yield stream_response({"code": 200,
                                        "type": "response",
                                        "model": model_name,
