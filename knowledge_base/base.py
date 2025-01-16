@@ -294,6 +294,8 @@ class KnowledgeBase:
             os.remove(file_path)
         if not kb_info.get('files') != {}:
             self.generate_vectors(kb_uuid)
+        else:
+            self.delete_kb(kb_uuid)
 
 # 使用示例
 if __name__ == "__main__":
