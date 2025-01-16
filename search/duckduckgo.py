@@ -8,6 +8,7 @@ import concurrent
 from config import NUMEXPR_MAX_THREADS
 import logging
 from utils import strip_tags
+from config import MAX_INPUT_LENGTH
 
 class SearchHelper:
     def __init__(self, region="wt-wt", time="d", max_results=5):
@@ -66,7 +67,13 @@ class SearchHelper:
                     logging.error(content)
                     content_list.append({"url": url, "content": None})
                 else:
-                    content_list.append({"url": url, "content": striped_content})  # 将结果保存到列表中
+                    if len(striped_content) > MAX_INPUT_LENGTH:
+                        logging.warning(
+                            f"{url} 内容过长，长度为{len(striped_content)}，超过{MAX_INPUT_LENGTH}字符限制，取前{MAX_INPUT_LENGTH}字符"
+                        )
+                        content_list.append({"url": url, "content": striped_content[:MAX_INPUT_LENGTH]})
+                    else:
+                        content_list.append({"url": url, "content": striped_content})  # 将结果保存到列表中
 
         return content_list
 

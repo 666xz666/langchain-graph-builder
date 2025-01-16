@@ -40,7 +40,7 @@ class KnowledgeBase:
         with open(self.metadata_file, 'w') as f:
             json.dump(self.kb_metadata, f, indent=4, ensure_ascii=False)
 
-    def create_kb(self, kb_name, desc):
+    def create_kb(self, kb_name, desc, is_tmp=False):
         kb_uuid = str(uuid.uuid4())
         kb_dir_name = f"{kb_uuid}_{kb_name}"
         kb_dir_path = os.path.join(VEC_BASE_PATH, kb_dir_name)
@@ -56,7 +56,8 @@ class KnowledgeBase:
                 "desc": desc,
                 "files": {},
                 "vec": True,
-                "graph": False
+                "graph": False,
+                "is_tmp": is_tmp
             }
 
             self.save_kb_metadata()
@@ -85,6 +86,14 @@ class KnowledgeBase:
             }
             self.save_kb_metadata()
             return file_uuid
+
+    async def upload_temp(self, kb_uuid, file):
+        if not kb_uuid or not self.kb_metadata.get(kb_uuid):
+            kb_uuid = self.create_kb("temp", "temp", is_tmp=True)
+        file_name = file.filename
+        file_uuid = await self.upload_file(kb_uuid, file, file_name)
+        self.generate_vectors(kb_uuid)
+        return f"{file_uuid}_{file_name}", kb_uuid
 
     def get_file(self, kb_uuid, file_uuid):
         kb_info = self.kb_metadata.get(kb_uuid)
@@ -275,6 +284,16 @@ class KnowledgeBase:
         if level == "all":
             self.delete_kb(kb_uuid)
         logging.info(f"delete KB: {kb_uuid} successfully, level: {level}")
+
+    def delete_temp(self, unique_filename, kb_uuid):
+        if not kb_uuid or not self.kb_metadata.get(kb_uuid):
+            return
+        kb_info = self.kb_metadata.get(kb_uuid)
+        file_path = os.path.join(VEC_BASE_PATH, kb_info['kb_dir'], 'files', unique_filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        if not kb_info.get('files') != {}:
+            self.generate_vectors(kb_uuid)
 
 # 使用示例
 if __name__ == "__main__":

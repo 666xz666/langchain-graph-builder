@@ -19,6 +19,7 @@ from config import (ALLOWED_EXTENSIONS, MAX_CONTENT_LENGTH,
 import json
 
 from utils import get_logging
+from datetime import datetime
 
 logging = get_logging()
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -101,6 +102,58 @@ async def upload_file(
         return {"code": 200, "msg": "文件上传成功", "file_uuid": file_uuid}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(
+    "/upload_temp",
+    tags=["temp", "chat_cumt"],
+    summary="上传临时文件",
+)
+async def upload_file(
+        file: UploadFile = File(..., description="上传的文件"),
+        prev_id: str = Form(..., description="临时对话文件库 ID")
+):
+    """
+    文件上传接口
+    """
+    # 检查文件类型
+    allowed_extensions = ALLOWED_EXTENSIONS
+    file_ext = file.filename.split(".")[-1].lower()
+    if file_ext not in allowed_extensions:
+        return JSONResponse(content={'code': 400, 'msg': '文件类型不支持'}, status_code=200)
+
+    try:
+        unique_filename, id = await kb.upload_temp(prev_id, file)
+        file_info = {
+            "code": 200,
+            "title": unique_filename,
+            "id": id,
+            "uuid": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "file_type": file_ext
+        }
+        return JSONResponse(content=file_info, status_code=200)
+
+    except Exception as e:
+        return JSONResponse(content={'code': 500, 'msg': str(e)}, status_code=200)
+
+# 向指定知识库上传文件接口
+@app.post(
+    "/delete_temp",
+    tags=["temp", "chat_cumt"],
+    summary="删除临时文件",
+)
+async def delete_temp(
+        file_name: str = Body(..., description="要删除的文件名称"),
+        prev_id: str = Body(..., description="临时对话文件库 ID")
+):
+    """
+    删除临时文件接口
+    """
+    try:
+        kb.delete_temp(prev_id, file_name)
+        return JSONResponse(content={'code': 200, 'msg': '文件删除成功'}, status_code=200)
+    except Exception as e:
+        return JSONResponse(content={'code': 500, 'msg': str(e)}, status_code=200)
 
 
 # 获取文件内容接口
@@ -209,7 +262,7 @@ async def get_kb_info():
 # 大模型流式对话接口
 @app.post(
     "/chat/chat",
-    tags=["chat"],
+    tags=["chat", 'chat_cumt'],
     summary="大模型流式对话",
 )
 async def chat_stream(
@@ -248,7 +301,7 @@ async def chat_stream(
 # 分析提问中URL页面信息对话
 @app.post(
     "/chat/url_info",
-    tags=["chat"],
+    tags=["chat", 'chat_cumt'],
     summary="分析提问中URL页面信息对话",
 )
 async def chat_url_info(
@@ -279,7 +332,7 @@ async def chat_url_info(
                 logging.warning(f"URL 数量超过最大限制 {MAX_URL_NUM}, 仅解析前 {MAX_URL_NUM} 个")
                 res = res[:MAX_URL_NUM]
 
-            yield stream_response({"code": 200, "type": "url_info", "msg": "URL 信息", "data": res})
+            # yield stream_response({"code": 200, "type": "url_info", "msg": "URL 信息", "data": res})
 
             system_prompt = URL_CHAT_PROMPT.format(url_info=res)
 
@@ -291,6 +344,15 @@ async def chat_url_info(
                                        "model": model_name,
                                        "data": response})
 
+            yield stream_response({"code": 200,
+                                   "type": "response",
+                                   "model": model_name,
+                                   "data": '\n\n## 提取URL：\n'})
+
+            for info in res:
+                yield stream_response({"code": 200, "type": "response", "msg": "URL 信息",
+                                       "data": f'[{info["url"]}]({info["url"]})' + '\n'})
+
         return StreamingResponse(generate(), media_type="text/event-stream")
     except Exception as e:
         logging.error(str(e))
@@ -300,7 +362,7 @@ async def chat_url_info(
 # RAG对话接口
 @app.post(
     "/chat/rag",
-    tags=["chat"],
+    tags=["chat", 'chat_cumt'],
     summary="RAG对话",
 )
 async def rag_chat(
@@ -328,7 +390,7 @@ async def rag_chat(
         llm = get_llm(model_name)
 
         async def generate():
-            yield stream_response({"code": 200, "type": "match", "msg": "匹配结果", "data": res})
+            # yield stream_response({"code": 200, "type": "match", "msg": "匹配结果", "data": res})
 
             async for response in llm.get_response(system_prompt, user_input,
                                                    history=history, temperature=temperature,
@@ -346,9 +408,9 @@ async def rag_chat(
             index = 1
             for match in res:
                 code_block = f"```\n{match[1]}\n```"
-                yield stream_response({"code": 200, "type": "match", "msg": f"匹配{index}结果", "data": f'{index}.\"\n' + code_block + f'\n\"\n相似度:{match[2]}\n'})
+                yield stream_response({"code": 200, "type": "match", "msg": f"匹配{index}结果",
+                                       "data": f'{index}.\"\n' + code_block + f'\n\"\n相似度:{match[2]}\n'})
                 index += 1
-
 
         return StreamingResponse(generate(), media_type="text/event-stream")
     except Exception as e:
@@ -359,7 +421,7 @@ async def rag_chat(
 # GraphRAG对话接口
 @app.post(
     "/chat/graph_rag",
-    tags=["chat"],
+    tags=["chat", 'chat_cumt'],
     summary="GraphRAG对话",
 )
 async def graph_rag_chat(
@@ -390,8 +452,8 @@ async def graph_rag_chat(
         llm = get_llm(model_name)
 
         async def generate():
-            for match in res:
-                yield stream_response({"code": 200, "type": "match", "msg": "匹配结果", "data": match})
+            # for match in res:
+            #     yield stream_response({"code": 200, "type": "match", "msg": "匹配结果", "data": match})
 
             async for response in llm.get_response(system_prompt, user_input,
                                                    history=history, temperature=temperature,
@@ -408,8 +470,6 @@ async def graph_rag_chat(
 
             for info in graph_info:
                 yield stream_response({"code": 200, "type": "response", "msg": "匹配结果", "data": info + '\n'})
-
-
 
         return StreamingResponse(generate(), media_type="text/event-stream")
     except Exception as e:
