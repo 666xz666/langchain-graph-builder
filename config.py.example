@@ -16,6 +16,9 @@ OPENAI_MODEL = "gpt-4"
 APIHZ_USER_ID = ''
 APIHZ_USER_KEY = ''
 
+# 设备类型, 可选 "cpu" 或 "cuda"
+DEVICE = "cpu"
+
 # Embedding模型路径
 EMBEDDING_MODEL_PATH = r"D:\xz\大创\矿大智慧助手\代码\langchain-graph-builder\models\multilingual_MiniLM_L12_v2"
 
