@@ -136,13 +136,14 @@ async def upload_file(
     except Exception as e:
         return JSONResponse(content={'code': 500, 'msg': str(e)}, status_code=200)
 
+
 # 向指定知识库上传文件接口
 @app.post(
     "/delete_temp",
     tags=["temp", "chat_cumt"],
     summary="删除临时文件",
 )
-async def delete_temp(
+def delete_temp(
         file_name: str = Body(..., description="要删除的文件名称"),
         prev_id: str = Body(..., description="临时对话文件库 ID")
 ):
@@ -150,7 +151,7 @@ async def delete_temp(
     删除临时文件接口
     """
     try:
-        kb.delete_temp(prev_id, file_name)
+        kb.delete_temp(file_name, prev_id)
         return JSONResponse(content={'code': 200, 'msg': '文件删除成功'}, status_code=200)
     except Exception as e:
         return JSONResponse(content={'code': 500, 'msg': str(e)}, status_code=200)
@@ -480,8 +481,10 @@ async def graph_rag_chat(
 if __name__ == "__main__":
     logging.info("加载 embedding 模型...")
     from embedding_models import embedding_loader
+
     embedding_loader.load_embedding_models()
     logging.info("加载 embedding 模型完成")
 
     import uvicorn
+
     uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT)
