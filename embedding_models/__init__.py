@@ -1,5 +1,5 @@
 from langchain.embeddings import HuggingFaceBgeEmbeddings
-from config import EMBEDDING_MODEL_PATH
+from config import EMBEDDING_MODEL_PATH, DEVICE
 
 
 class EmbeddingLoader:
@@ -9,7 +9,8 @@ class EmbeddingLoader:
     def load_embedding_models(self):
         if self.embedding is None:
             self.embedding = HuggingFaceBgeEmbeddings(
-                model_name=EMBEDDING_MODEL_PATH
+                model_name=EMBEDDING_MODEL_PATH,
+                model_kwargs={'device': DEVICE}
             )
 
     def get_embedding_model(self):
